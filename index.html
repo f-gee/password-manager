@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en" class="bg-slate-950 text-slate-100">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Secure Password Manager & Vault</title>
+    <link rel="stylesheet" href="./index.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+              mono: ["JetBrains Mono", "ui-monospace", "SFMono-Regular", "monospace"]
+            },
+            colors: {
+              indigo: {
+                50: '#faf5ff',
+                100: '#f3e8ff',
+                200: '#e9d5ff',
+                300: '#d8b4fe',
+                400: '#a552fe',
+                500: '#7a14cc',
+                600: '#5D06A4',
+                650: '#4e0789',
+                700: '#490483',
+                800: '#3a036a',
+                900: '#29014e',
+                950: '#14002c'
+              },
+              slate: {
+                50: '#fafafa',
+                100: '#f5f5f5',
+                200: '#e5e5e5',
+                300: '#d4d4d4',
+                350: '#cccccc',
+                400: '#a3a3a3',
+                500: '#737373',
+                550: '#888888',
+                600: '#525252',
+                705: '#490483',
+                700: '#2b2b2b',
+                800: '#1a1a1a',
+                850: '#121212',
+                900: '#080808',
+                950: '#020202'
+              }
+            }
+          }
+        }
+      }
+    </script>
+  </head>
+  <body class="bg-slate-950 text-slate-100 min-h-screen font-sans selection:bg-indigo-600 selection:text-white">
+
+    <!-- Page Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <!-- Top Header Row -->
+      <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-900 mb-8" id="main-header">
+        <div class="flex items-center gap-4 shrink-0">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-950/60 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-950/30">
+            <!-- Shield Lock Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2A1 1 0 0 1 20 6z"/>
+              <path d="M12 22V2"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-100 to-slate-400 bg-clip-text text-transparent">SECURE CREDENTIALS MANAGER</h1>
+            <p class="text-xs text-slate-500 font-mono">OFFLINE-FIRST ENCRYPTED CLIENT VAULT v2</p>
+          </div>
+        </div>
+
+        <!-- Search Bar Input in Top Bar -->
+        <div class="relative w-full lg:max-w-md flex-1">
+          <div class="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-slate-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+          </div>
+          <input 
+            type="text" 
+            id="search-input" 
+            placeholder="Search credentials, sites, or attributes..." 
+            class="w-full bg-slate-900 border border-slate-800 focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 text-xs px-4 py-2.5 pl-11 rounded-xl outline-none transition-all placeholder:text-slate-600 text-slate-200"
+          />
+        </div>
+
+        <!-- Import / Export Action Tools -->
+        <div class="flex flex-wrap items-center justify-center lg:justify-end gap-3 shrink-0 w-full lg:w-auto">
+          <button id="btn-create-account" class="cursor-pointer bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-semibold px-4.5 py-2.5 rounded-xl border border-indigo-500/20 active:translate-y-[1px] transition-all inline-flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-950/40">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/><path d="M12 5v14"/>
+            </svg>
+            <span class="align-middle">Parent Mailbox</span>
+          </button>
+          
+          <button id="btn-export" class="cursor-pointer bg-slate-900 hover:bg-slate-850 hover:border-slate-700 border border-slate-800 text-slate-300 text-xs font-medium px-4 py-2.5 rounded-xl active:translate-y-[1px] transition-all inline-flex items-center justify-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span class="align-middle">Export Backup</span>
+          </button>
+
+          <button id="btn-import-trigger" class="cursor-pointer bg-slate-900 hover:bg-slate-850 hover:border-slate-700 border border-slate-800 text-slate-300 text-xs font-medium px-4 py-2.5 rounded-xl active:translate-y-[1px] transition-all inline-flex items-center justify-center gap-1.5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <span class="align-middle">Import JSON</span>
+          </button>
+
+          <!-- Hidden File Uploader -->
+          <input type="file" id="file-uploader" class="hidden" accept=".json" />
+        </div>
+      </header>
+
+      <!-- Drag & Drop Overlay Panel -->
+      <div id="drag-drop-zone" class="border-2 border-dashed border-indigo-500/20 bg-indigo-500/[0.015] rounded-2xl p-6 mb-8 text-center hidden transition-all">
+        <p class="text-xs font-mono text-indigo-400">⚡ Drop your JSON credentials template on this card to import instantly ⚡</p>
+      </div>
+
+      <!-- Secure Token Generator Card -->
+      <section class="bg-slate-900/40 border border-slate-800/60 p-5 rounded-2xl mb-8 flex flex-col gap-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 text-center md:text-left">
+          <div class="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3 w-full md:w-auto">
+            <div class="w-9 h-9 rounded-xl bg-indigo-950/60 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4.5 h-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3m-3-3l2.5-2.5"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-350">QUICK TOKEN GENERATOR</h3>
+              <p class="text-[10px] text-slate-500 font-mono">Create enterprise-grade cryptographic secrets instantly</p>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-center md:justify-end gap-2.5 w-full md:w-auto md:max-w-md flex-1">
+            <div class="relative flex-1 max-w-full md:max-w-xs">
+              <input 
+                type="text" 
+                id="generator-token-display" 
+                readonly 
+                placeholder="Click button to generate..." 
+                class="w-full bg-slate-950 border border-slate-850 focus:border-indigo-500/40 text-xs px-8 py-2.5 rounded-xl font-mono tracking-wide text-indigo-300 outline-none select-all placeholder:text-slate-700 text-center"
+              />
+              <button 
+                id="btn-copy-generator-token" 
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 p-1 rounded transition-colors cursor-pointer inline-flex items-center justify-center"
+                title="Copy token"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="icon-generator-copy-state">
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                  <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                </svg>
+              </button>
+            </div>
+            <button 
+              id="btn-trigger-generation" 
+              class="bg-indigo-600/10 hover:bg-indigo-600/25 border border-indigo-500/30 text-indigo-400 text-xs font-bold px-4.5 py-2.5 rounded-xl cursor-pointer active:translate-y-[1px] transition-all whitespace-nowrap"
+            >
+              Generate Token
+            </button>
+          </div>
+        </div>
+
+        <!-- Token config controls row -->
+        <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 pt-3 border-t border-slate-800/40 text-xs">
+          <!-- Slider input -->
+          <div class="flex items-center gap-3 justify-center sm:justify-start">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">Length:</span>
+            <input 
+              type="range" 
+              id="token-length-slider" 
+              min="8" 
+              max="64" 
+              value="18" 
+              class="w-28 sm:w-36 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+            />
+            <span id="token-length-display" class="font-mono text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/25 min-w-8 text-center">18</span>
+          </div>
+
+          <!-- Divider for non-mobile screen, hidden on small screens -->
+          <span class="hidden sm:inline text-slate-700 select-none">|</span>
+
+          <!-- Characters Set selectors -->
+          <div class="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">Charset Mode:</span>
+            <div class="bg-slate-950 border border-slate-850 p-1 rounded-lg flex items-center gap-1">
+              <button 
+                type="button"
+                id="btn-charset-alphanumeric" 
+                class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer bg-slate-900 text-slate-400 hover:text-slate-350"
+              >
+                Alphanumeric
+              </button>
+              <button 
+                type="button"
+                id="btn-charset-all" 
+                class="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all cursor-pointer bg-indigo-600 text-white"
+              >
+                Full (With Symbols)
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Master Accounts Vault Container -->
+      <main id="accounts-vault" class="grid grid-cols-1 gap-6">
+        <!-- Live lists of card blocks dynamically appended here by main.js -->
+        <div class="text-center py-16 bg-slate-900/20 border border-dashed border-slate-800/40 rounded-2xl">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-slate-700 mx-auto mb-3 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+          </svg>
+          <p class="text-xs font-mono text-slate-500">Decrypting securely...</p>
+        </div>
+      </main>
+
+    </div>
+
+    <!-- MODAL POPUP: Create Mailbox Container -->
+    <div id="modal-create-account" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden animate-fade-in">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl relative">
+        <div class="p-6 border-b border-slate-800/60">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-200">New Mailbox Vault Container</h3>
+            <button id="modal-create-close" class="text-slate-500 hover:text-slate-300 p-1.5 hover:bg-slate-850 rounded-lg transition-colors cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <form id="modal-create-form" class="p-6 space-y-4">
+          <!-- email field -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Mailbox Email Address *</label>
+            <input 
+              type="email" 
+              id="form-create-email" 
+              required 
+              placeholder="e.g. adrian.morrison@gmail.com" 
+              class="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 text-xs p-3 rounded-xl outline-none font-mono tracking-wide text-slate-200 placeholder:text-slate-700"
+            />
+          </div>
+
+          <!-- password field with random generator -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mailbox Access Password *</label>
+              <button type="button" id="form-create-generate-pwd" class="text-[10px] font-bold font-mono text-indigo-400 hover:text-indigo-300 flex items-center gap-1 uppercase cursor-pointer">
+                Generate Secure Token
+              </button>
+            </div>
+            <input 
+              type="text" 
+              id="form-create-password" 
+              required 
+              placeholder="Primary active password" 
+              class="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 text-xs p-3 rounded-xl outline-none font-mono tracking-wide text-slate-200 placeholder:text-slate-700"
+            />
+          </div>
+
+          <!-- note field -->
+          <div>
+            <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Administrative Note (Optional)</label>
+            <input 
+              type="text" 
+              id="form-create-note" 
+              placeholder="e.g. Daily outlook, active directory token, update quarterly..." 
+              class="w-full bg-slate-950/80 border border-slate-800 focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 text-xs p-3 rounded-xl outline-none text-slate-200 placeholder:text-slate-700"
+            />
+          </div>
+
+          <div class="pt-2 flex items-center justify-end gap-3">
+            <button type="button" id="modal-create-cancel" class="cursor-pointer bg-slate-950 hover:bg-slate-850 hover:border-slate-700 border border-slate-800 text-slate-400 text-xs font-semibold px-4.5 py-3 rounded-xl active:translate-y-[1px] transition-all">
+              Cancel
+            </button>
+            <button type="submit" class="cursor-pointer bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-semibold px-5 py-3 rounded-xl border border-indigo-500/20 active:translate-y-[1px] transition-all flex items-center gap-2">
+              Create Mailbox
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- CUSTOM CONFIRMATION DIALOG MODAL -->
+    <div id="modal-confirm" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden animate-fade-in">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl relative">
+        <div class="p-5 border-b border-slate-800/60 font-sans">
+          <div class="flex items-center gap-3">
+            <span id="modal-confirm-icon-danger" class="text-rose-500 bg-rose-500/10 p-2 rounded-xl border border-rose-500/10">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </span>
+            <span id="modal-confirm-icon-info" class="text-indigo-400 bg-indigo-500/10 p-2 rounded-xl border border-indigo-500/10 hidden">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+              </svg>
+            </span>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200" id="modal-confirm-title">Confirm Action</h3>
+          </div>
+        </div>
+        <div class="p-5">
+          <p class="text-xs text-slate-400 font-mono leading-relaxed whitespace-pre-line" id="modal-confirm-message">Are you sure you want to perform this action?</p>
+          <div class="mt-6 flex flex-wrap items-center justify-end gap-3 font-sans" id="modal-confirm-buttons-row">
+            <button id="modal-confirm-cancel" class="cursor-pointer bg-slate-950 hover:bg-slate-850 hover:border-slate-700 border border-slate-800 text-slate-400 text-xs font-semibold px-4 py-2.5 rounded-xl active:translate-y-[1px] transition-all">
+              Cancel
+            </button>
+            <button id="modal-confirm-alternative" class="cursor-pointer bg-slate-900 border border-slate-800 hover:border-rose-500/30 hover:bg-rose-950/10 text-rose-400 text-xs font-semibold px-4 py-2.5 rounded-xl active:translate-y-[1px] transition-all hidden">
+              Alternative Action
+            </button>
+            <button id="modal-confirm-submit" class="cursor-pointer bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-semibold px-4.5 py-2.5 rounded-xl border border-rose-500/20 active:translate-y-[1px] transition-all">
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS POPUP FRAME -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- Main JavaScript Modules -->
+    <script type="module" src="./storage.js"></script>
+    <script type="module" src="./main.js"></script>
+
+  </body>
+</html>

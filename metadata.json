@@ -1,0 +1,6 @@
+{
+  "name": "Password Manager",
+  "description": "An offline, browser-based password manager featuring email accounts as primary entries and site-password key-value pairs as sub-entries.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
