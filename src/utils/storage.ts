@@ -1,4 +1,6 @@
-const SAMPLE_ACCOUNTS = [
+import { Account, SubEntry, FieldAttribute } from '../types';
+
+export const SAMPLE_ACCOUNTS: Account[] = [
   {
     id: "sample-1",
     email: "adam.morrison@corpmail.com",
@@ -99,13 +101,13 @@ const STORE_NAME = "vault_store";
 const DB_VERSION = 1;
 const RECORD_KEY = "accounts_data";
 
-function openDatabase() {
+function openDatabase(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onerror = (event) => reject(event.target.error || new Error("Failed to open IndexedDB"));
-    request.onsuccess = (event) => resolve(event.target.result);
+    request.onerror = (event) => reject((event.target as IDBOpenDBRequest).error || new Error("Failed to open IndexedDB"));
+    request.onsuccess = (event) => resolve((event.target as IDBOpenDBRequest).result);
     request.onupgradeneeded = (event) => {
-      const db = event.target.result;
+      const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME);
       }
@@ -113,40 +115,50 @@ function openDatabase() {
   });
 }
 
-async function loadCredentialsFromIndexedDB() {
-  const db = await openDatabase();
-  const data = await new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readonly");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(RECORD_KEY);
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = (e) => reject(e.target.error);
-  });
+export async function loadCredentialsFromIndexedDB(): Promise<Account[]> {
+  try {
+    const db = await openDatabase();
+    const data = await new Promise<Account[] | null>((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, "readonly");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.get(RECORD_KEY);
+      request.onsuccess = () => resolve(request.result || null);
+      request.onerror = (e) => reject((e.target as IDBRequest).error);
+    });
 
-  if (data) {
-    return data;
+    if (data && Array.isArray(data)) {
+      return data;
+    }
+
+    // No data found in IndexedDB, seed with default SAMPLE_ACCOUNTS
+    await saveCredentialsToIndexedDB(SAMPLE_ACCOUNTS);
+    return SAMPLE_ACCOUNTS;
+  } catch (err) {
+    console.warn("IndexedDB load failed, falling back to local memory seed:", err);
+    return SAMPLE_ACCOUNTS;
   }
-
-  // No data found in IndexedDB, seed with default SAMPLE_ACCOUNTS
-  await saveCredentialsToIndexedDB(SAMPLE_ACCOUNTS);
-  return SAMPLE_ACCOUNTS;
 }
 
-async function saveCredentialsToIndexedDB(accounts) {
-  const db = await openDatabase();
-  await new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, "readwrite");
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.put(accounts, RECORD_KEY);
-    request.onsuccess = () => resolve();
-    request.onerror = (e) => reject(e.target.error);
-  });
+export async function saveCredentialsToIndexedDB(accounts: Account[]): Promise<void> {
+  try {
+    const db = await openDatabase();
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const request = store.put(accounts, RECORD_KEY);
+      request.onsuccess = () => resolve();
+      request.onerror = (e) => reject((e.target as IDBRequest).error);
+    });
+  } catch (err) {
+    console.error("Failed writing to IndexedDB:", err);
+  }
 }
 
-function exportToJSONFile(accounts) {
+export function exportToJSONFile(accounts: Account[]): void {
   const exportedAccounts = accounts.map(acc => {
     const cleanedSubEntries = (acc.subEntries || []).map(sub => {
-      const cleanedValList = (sub.val || sub.values || sub.fields || []).map(f => {
+      const rawFields = sub.val || sub.values || sub.fields || [];
+      const cleanedValList = rawFields.map((f: any) => {
         let rawVal = f.val !== undefined ? f.val : (f.values !== undefined ? f.values : (f.fieldValue !== undefined ? f.fieldValue : ""));
         if (typeof rawVal === "string" && rawVal.includes("\n")) {
           rawVal = rawVal.split("\n");
@@ -183,30 +195,29 @@ function exportToJSONFile(accounts) {
   URL.revokeObjectURL(url);
 }
 
-function getDisplayValue(val) {
+export function getDisplayValue(val: string | string[] | undefined): string {
   if (Array.isArray(val)) {
     return val.join('\n');
   }
   return val || '';
 }
 
-function migrateLegacyData(data) {
+export function migrateLegacyData(data: any): Account[] | null {
   if (!Array.isArray(data)) return null;
-  const migrated = [];
+  const migrated: Account[] = [];
 
   for (const item of data) {
     const subEntries = Array.isArray(item.subEntries) ? item.subEntries : [];
-    const validSubEntries = subEntries.map(sub => {
-      const valArray = [];
+    const validSubEntries: SubEntry[] = subEntries.map((sub: any) => {
+      const valArray: FieldAttribute[] = [];
       const oldFields = Array.isArray(sub.val) ? sub.val : (Array.isArray(sub.values) ? sub.values : (Array.isArray(sub.fields) ? sub.fields : []));
 
       if (oldFields.length > 0) {
-        oldFields.forEach(f => {
+        oldFields.forEach((f: any) => {
           if (f) {
             const k = f.key || f.fieldKey || "attribute";
             let rawVal = f.val !== undefined ? f.val : (f.values !== undefined ? f.values : (f.fieldValue !== undefined ? f.fieldValue : ""));
 
-            // Convert to array if it is a string with newlines
             let finalVal = rawVal;
             if (typeof rawVal === "string" && rawVal.includes("\n")) {
               finalVal = rawVal.split("\n");
@@ -222,7 +233,7 @@ function migrateLegacyData(data) {
       } else {
         const singleVal = sub.val || sub.value || sub.values;
         if (typeof singleVal === 'string') {
-          let finalVal = singleVal;
+          let finalVal: string | string[] = singleVal;
           if (singleVal.includes("\n")) {
             finalVal = singleVal.split("\n");
           }
@@ -252,16 +263,18 @@ function migrateLegacyData(data) {
   return migrated;
 }
 
-function validateImportedData(data) {
+export function validateImportedData(data: any): Account[] | null {
   if (!Array.isArray(data)) return null;
   return migrateLegacyData(data);
 }
 
-// Assign to window for clean global access
-window.SAMPLE_ACCOUNTS = SAMPLE_ACCOUNTS;
-window.loadCredentialsFromIndexedDB = loadCredentialsFromIndexedDB;
-window.saveCredentialsToIndexedDB = saveCredentialsToIndexedDB;
-window.exportToJSONFile = exportToJSONFile;
-window.migrateLegacyData = migrateLegacyData;
-window.validateImportedData = validateImportedData;
-window.getDisplayValue = getDisplayValue;
+export function generateRandomToken(length = 16, includeSymbols = true): string {
+  const alphaNum = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const symbols = "!@#$%^&*()_+~|";
+  const chars = includeSymbols ? alphaNum + symbols : alphaNum;
+  let token = "";
+  for (let i = 0; i < length; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return token;
+}
